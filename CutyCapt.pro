@@ -1,4 +1,4 @@
-QT       +=  webkit svg network
+QT       +=  webkit svg network printsupport
 SOURCES   =  CutyCapt.cpp
 HEADERS   =  CutyCapt.hpp
 CONFIG   +=  qt console
