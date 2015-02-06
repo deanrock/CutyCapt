@@ -15,6 +15,7 @@ public:
   void setPrintAlerts(bool printAlerts);
   void setCutyCapt(CutyCapt* cutyCapt);
   QString getAlertString();
+  QString mSelector;
 
 protected:
   QString chooseFile(QWebFrame *frame, const QString& suggestedFile);

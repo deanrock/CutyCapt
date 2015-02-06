@@ -251,6 +251,39 @@ CutyCapt::handleSslErrors(QNetworkReply* reply, QList<QSslError> errors) {
 void
 CutyCapt::saveSnapshot() {
     QWebFrame *mainFrame = mPage->mainFrame();
+
+    if (this-mPage->mSelector.count() > 0) {
+        QWebElementCollection collection = mainFrame->findAllElements(this->mPage->mSelector);
+
+        QJsonObject obj;
+        QJsonArray elements;
+
+        foreach(QWebElement elem, collection) {
+            QJsonObject e;
+            e["id"] = elem.attribute("id");
+            e["x"] = elem.geometry().x();
+            e["y"] = elem.geometry().y();
+            e["width"] = elem.geometry().width();
+            e["height"] = elem.geometry().height();
+            elements.append(e);
+        }
+
+        obj["elements"] = elements;
+
+        //get .json filename
+        int lastPoint = mOutput.lastIndexOf(".");
+        QString jsonFilename = mOutput.left(lastPoint) + ".json";
+
+        //write JSON file
+        QFile file(jsonFilename);
+        file.open(QIODevice::WriteOnly | QIODevice::Text);
+        QTextStream out(&file);
+
+        out << QJsonDocument(obj).toJson(QJsonDocument::Compact);
+
+        file.close();
+    }
+
     QPainter painter;
     const char* format = NULL;
 
@@ -376,6 +409,7 @@ CaptHelp(void) {
            "  --smooth                       Attempt to enable Qt's high-quality settings.\n"
        #endif
            "  --insecure                     Ignore SSL/TLS certificate errors            \n"
+           "  --selector=<selector>          Get details of elements matching this selector \n"
            " -----------------------------------------------------------------------------\n"
            "  <f> is svg,ps,pdf,itext,html,rtree,png,jpeg,mng,tiff,gif,bmp,ppm,xbm,xpm    \n"
            " -----------------------------------------------------------------------------\n"
@@ -414,6 +448,8 @@ main(int argc, char *argv[]) {
     const char* argIconDbPath = NULL;
     const char* argInjectScript = NULL;
     const char* argScriptObject = NULL;
+    const char* argSelector = NULL;
+
     QString argOut;
 
     CutyCapt::OutputFormat format = CutyCapt::OtherFormat;
@@ -619,7 +655,8 @@ main(int argc, char *argv[]) {
                 method = QNetworkAccessManager::HeadOperation;
             else
                 (void)0; // TODO: ...
-
+        } else if (strncmp("--selector", s, nlen) == 0) {
+            argSelector = value;
         } else {
             // TODO: error
             argHelp = 1;
@@ -684,6 +721,10 @@ main(int argc, char *argv[]) {
     if (argIconDbPath != NULL)
         // TODO: does this need any syntax checking?
         page.settings()->setIconDatabasePath(argUserStyle);
+
+    if (argSelector != NULL) {
+        page.mSelector = QString(argSelector);
+    }
 
     // The documentation does not say, but it seems the mainFrame
     // will never change, so we can set this here. Otherwise we'd
