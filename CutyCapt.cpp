@@ -343,8 +343,19 @@ CutyCapt::saveSnapshot() {
         break;
     }
     default: {
-        QImage image(mPage->viewportSize(), QImage::Format_ARGB32);
+        QSize viewport = mPage->viewportSize();
+
+        if (mPage->mRetina) {
+            viewport = QSize(viewport.width() * 2, viewport.height() * 2);
+        }
+
+        QImage image(viewport, QImage::Format_ARGB32);
         painter.begin(&image);
+
+        if (mPage->mRetina) {
+            painter.scale(2, 2);
+        }
+
 #if QT_VERSION >= 0x050000
         if (mSmooth) {
             painter.setRenderHint(QPainter::SmoothPixmapTransform);
@@ -409,7 +420,8 @@ CaptHelp(void) {
            "  --smooth                       Attempt to enable Qt's high-quality settings.\n"
        #endif
            "  --insecure                     Ignore SSL/TLS certificate errors            \n"
-           "  --selector=<selector>          Get details of elements matching this selector \n"
+           "  --selector=<selector>         Get details of elements matching this selector\n"
+           "  --retina=<on|off>            Take retina (2x size) screenshot (default: off)\n"
            " -----------------------------------------------------------------------------\n"
            "  <f> is svg,ps,pdf,itext,html,rtree,png,jpeg,mng,tiff,gif,bmp,ppm,xbm,xpm    \n"
            " -----------------------------------------------------------------------------\n"
@@ -657,6 +669,10 @@ main(int argc, char *argv[]) {
                 (void)0; // TODO: ...
         } else if (strncmp("--selector", s, nlen) == 0) {
             argSelector = value;
+        } else if (strncmp("--retina", s, nlen) == 0) {
+            if (QString(value) == "on") {
+                page.mRetina = true;
+            }
         } else {
             // TODO: error
             argHelp = 1;

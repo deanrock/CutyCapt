@@ -16,6 +16,7 @@ public:
   void setCutyCapt(CutyCapt* cutyCapt);
   QString getAlertString();
   QString mSelector;
+  bool mRetina;
 
 protected:
   QString chooseFile(QWebFrame *frame, const QString& suggestedFile);
