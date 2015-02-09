@@ -261,10 +261,19 @@ CutyCapt::saveSnapshot() {
         foreach(QWebElement elem, collection) {
             QJsonObject e;
             e["id"] = elem.attribute("id");
-            e["x"] = elem.geometry().x();
-            e["y"] = elem.geometry().y();
-            e["width"] = elem.geometry().width();
-            e["height"] = elem.geometry().height();
+
+            if (this->mPage->mRetina) {
+                e["x"] = elem.geometry().x() * 2;
+                e["y"] = elem.geometry().y() * 2;
+                e["width"] = elem.geometry().width() * 2;
+                e["height"] = elem.geometry().height() * 2;
+            }else{
+                e["x"] = elem.geometry().x();
+                e["y"] = elem.geometry().y();
+                e["width"] = elem.geometry().width();
+                e["height"] = elem.geometry().height();
+            }
+
             elements.append(e);
         }
 
@@ -468,6 +477,7 @@ main(int argc, char *argv[]) {
 
     QApplication app(argc, argv, true);
     CutyPage page;
+    page.mRetina = false;
 
     QNetworkAccessManager::Operation method =
             QNetworkAccessManager::GetOperation;
