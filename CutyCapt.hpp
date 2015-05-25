@@ -17,6 +17,8 @@ public:
   QString getAlertString();
   QString mSelector;
   bool mRetina;
+  int fixedWidth;
+  int fixedHeight;
 
 protected:
   QString chooseFile(QWebFrame *frame, const QString& suggestedFile);

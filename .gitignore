@@ -5,3 +5,6 @@ Makefile
 moc_CutyCapt.cpp
 moc_CutyCapt.o
 CutyCapt.pro.user
+output.json
+.vagrant/
+

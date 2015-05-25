@@ -251,6 +251,21 @@ CutyCapt::handleSslErrors(QNetworkReply* reply, QList<QSslError> errors) {
 void
 CutyCapt::saveSnapshot() {
     QWebFrame *mainFrame = mPage->mainFrame();
+    
+    // TODO: sometimes contents/viewport can have size 0x0
+    // in which case saving them will fail. This is likely
+    // the result of the method being called too early. So
+    // far I've been unable to find a workaround, except
+    // using --delay with some substantial wait time. I've
+    // tried to resize multiple time, make a fake render,
+    // check for other events... This is primarily a problem
+    // under my Ubuntu virtual machine.
+
+    mPage->setViewportSize( mainFrame->contentsSize() );
+    
+    if (mPage->fixedWidth != 0 && mPage->fixedHeight != 0) {
+      mPage->setViewportSize(QSize(mPage->fixedWidth, mPage->fixedHeight));
+    }
 
     if (this-mPage->mSelector.count() > 0) {
         QWebElementCollection collection = mainFrame->findAllElements(this->mPage->mSelector);
@@ -299,17 +314,6 @@ CutyCapt::saveSnapshot() {
     for (int ix = 0; CutyExtMap[ix].id != OtherFormat; ++ix)
         if (CutyExtMap[ix].id == mFormat)
             format = CutyExtMap[ix].identifier; //, break;
-
-    // TODO: sometimes contents/viewport can have size 0x0
-    // in which case saving them will fail. This is likely
-    // the result of the method being called too early. So
-    // far I've been unable to find a workaround, except
-    // using --delay with some substantial wait time. I've
-    // tried to resize multiple time, make a fake render,
-    // check for other events... This is primarily a problem
-    // under my Ubuntu virtual machine.
-
-    mPage->setViewportSize( mainFrame->contentsSize() );
 
     switch (mFormat) {
     case SvgFormat: {
@@ -431,6 +435,8 @@ CaptHelp(void) {
            "  --insecure                     Ignore SSL/TLS certificate errors            \n"
            "  --selector=<selector>         Get details of elements matching this selector\n"
            "  --retina=<on|off>            Take retina (2x size) screenshot (default: off)\n"
+           "  --fixed-width=<width>          Force width and height (you must use         \n"
+           "  --fixed-height=<height>            both parameters!)                        \n"
            " -----------------------------------------------------------------------------\n"
            "  <f> is svg,ps,pdf,itext,html,rtree,png,jpeg,mng,tiff,gif,bmp,ppm,xbm,xpm    \n"
            " -----------------------------------------------------------------------------\n"
@@ -478,6 +484,8 @@ main(int argc, char *argv[]) {
     QApplication app(argc, argv, true);
     CutyPage page;
     page.mRetina = false;
+    page.fixedWidth = 0;
+    page.fixedHeight = 0;
 
     QNetworkAccessManager::Operation method =
             QNetworkAccessManager::GetOperation;
@@ -683,6 +691,10 @@ main(int argc, char *argv[]) {
             if (QString(value) == "on") {
                 page.mRetina = true;
             }
+        } else if (strncmp("--fixed-width", s, nlen) == 0) {
+            page.fixedWidth = (unsigned int)atoi(value);
+        } else if (strncmp("--fixed-height", s, nlen) == 0) {
+            page.fixedHeight = (unsigned int)atoi(value);
         } else {
             // TODO: error
             argHelp = 1;
